@@ -11,7 +11,8 @@ class BoardRow extends React.Component{
   render(){
     let cols = [];
     for (let i = 0; i < this.props.cells.length; i++){
-      cols.push((<td>{this.props.cells[i]}</td>));
+      let c = this.props.cells[i];
+      cols.push((<td className={"tile"+c}>{c}</td>));
     }
     return <tr>{cols}</tr>;
   }

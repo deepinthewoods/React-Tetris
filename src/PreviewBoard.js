@@ -2,7 +2,7 @@ import React from 'react';
 import BoardRow from './BoardRow.js';
 
 
-class Board extends React.Component{
+class PreviewBoard extends React.Component{
   constructor(props){
     super(props);
 
@@ -20,4 +20,4 @@ class Board extends React.Component{
     );
   }
 };
-export default Board;
+export default PreviewBoard;

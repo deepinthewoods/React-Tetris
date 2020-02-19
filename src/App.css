@@ -1,0 +1,32 @@
+td {
+  color : black;
+  background-color : black;
+}
+.tile0 {
+  background-color : red;
+  color : red;
+}
+.tile1 {
+  background-color : cyan;
+  color : cyan;
+}
+.tile2 {
+  background-color : orange;
+  color : orange;
+}
+.tile3 {
+  background-color : blue;
+  color : blue;
+}
+.tile4 {
+  background-color : magenta;
+  color : magenta;
+}
+.tile5 {
+  background-color : green;
+  color : green;
+}
+.tile6 {
+  background-color : yellow;
+  color : yellow;
+}
