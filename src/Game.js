@@ -164,6 +164,7 @@ const TOTAL_PREVIEW_COLUMNS = 4;
 const ROTATEOFFSETSX = [0, 1, -1, 0, 1, -1];//flip for right
 const ROTATEOFFSETSY = [0, 0, 0, -1, -1, -1];
 const INITIALOFFSET = [2, 1, 1, 1, 1, 1, 0];
+// const INITIALOFFSET = [0, 0, 0, 0, 0, 0, 0];
 
 class Game extends React.Component{
   constructor(props){
@@ -219,7 +220,7 @@ class Game extends React.Component{
         if (p[i][j] != ' '){
           //newCells[i+y][j+x] = p[i][j];
           if (j+x >= TOTAL_COLUMNS) return false;
-          if (y < 0) return false;
+          if (i + y < 0) return false;
           if (i + y >= TOTAL_ROWS) return false;
           if (cells[i+y][j+x] != '@') return false;
         }
@@ -328,9 +329,35 @@ class Game extends React.Component{
           isNewPiece: false,
         });
       }
+      this.checkForCompletedLines();
   }
 
+  checkForCompletedLines(){
+    let found = false;
+    let newCells = this.state.baseCells.map(function(arr) {
+      return arr.slice();
+    });
+    for (let i = 0; i < TOTAL_ROWS; i++){
+      let row = newCells[i];
+      let rowFound = true;
+      for (let x = 0; x < row.length; x++){
+        if (row[x] == '@')
+          rowFound = false;
+      }
+      if (rowFound){
+        found = true;
+        let rem = newCells.splice(i, 1)[0];//remove row
+        rem.fill('@');
+        newCells.unshift(rem);
+      }
+    }
 
+    if (found){
+      this.setState({
+        baseCells: newCells,
+      });
+    }
+  }
 
   moveX(interval){
     let x = this.state.pieceX;
