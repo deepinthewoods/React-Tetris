@@ -165,10 +165,15 @@ const ROTATEOFFSETSX = [0, 1, -1, 0, 1, -1];//flip for right
 const ROTATEOFFSETSY = [0, 0, 0, -1, -1, -1];
 const INITIALOFFSET = [2, 1, 1, 1, 1, 1, 0];
 // const INITIALOFFSET = [0, 0, 0, 0, 0, 0, 0];
+const INTERVAL_START = 300;
+const INTERVAL_END = 50;
+const TOTAL_LEVELS = 10;
+const TIME_BETWEEN_LEVELS = 10000;
 
 class Game extends React.Component{
+
   constructor(props){
-    console.log("constr");
+    // console.log("constr");
     super(props);
     this.handleKeyPress = this.handleKeyPress.bind(this);
     let cellst = [];
@@ -197,19 +202,30 @@ class Game extends React.Component{
       previewCells: pCells,
       nextID : next,
       isNewPiece: true,
+      lastLevelTime: Date.now(),
+      level:0,
     };
     this.setPreviewCells(next);
     this.tick = this.tick.bind(this);
 
   }
 
+  getInterval(level){
+    let int = INTERVAL_START - INTERVAL_END;
+    int /= TOTAL_LEVELS;
+    let interval = INTERVAL_START - int * level;
+  //  console.log("interval for level " + level + " : " + interval);
+    return interval;
+  }
+
   componentDidMount() {
-    this.interval = setInterval(this.tick, 150);
+    //this.interval =
+    setTimeout(this.tick, this.getInterval(0));
     document.addEventListener("keydown", this.handleKeyPress, false);
 
   }
   componentWillUnmount() {
-    clearInterval(this.interval);
+    //clearInterval(this.interval);
     document.removeEventListener("keydown", this.handleKeyPress, false);
 
   }
@@ -272,9 +288,7 @@ class Game extends React.Component{
       let r = this.state.pieceRotation;
       let x = this.state.pieceX;
       let y = this.state.pieceY;
-      let newCells = this.state.baseCells.map(function(arr) {
-        return arr.slice();
-      });
+
       let p = pieces[id*4+r];
       let newPiece = false;
       let falls = 1;
@@ -296,11 +310,7 @@ class Game extends React.Component{
         }
       }
 
-      for (let i = 0; i < p.length; i++)
-        for (let j = 0; j < p[0].length; j++){
-          if (p[i][j] != ' ')
-            newCells[i+y][j+x] = p[i][j];
-        }
+      let newCells = this.getNewCells(x, y, id, r);
 
       if (newPiece){
 
@@ -330,7 +340,17 @@ class Game extends React.Component{
         });
       }
       this.checkForCompletedLines();
+      let date = Date.now();
+      if ((date - this.state.lastLevelTime) > TIME_BETWEEN_LEVELS && this.state.level < TOTAL_LEVELS){
+        this.setState({
+          level: this.state.level+1,
+          lastLevelTime: date,
+        })
+      }
+      if (!newPiece)setTimeout(this.tick, this.getInterval(this.state.level));
+
   }
+
 
   checkForCompletedLines(){
     let found = false;
@@ -366,13 +386,49 @@ class Game extends React.Component{
     let r = this.state.pieceRotation;
     //x += interval;
     if (this.moveValid(x+interval, y, id, r, this.state.baseCells)){
+      x += interval;
+      let newCells = this.getNewCells(x, y, id, r);
+
+
+
       this.setState({
-        pieceX : x+interval,
-      })
+        pieceX : x,
+        cells : newCells,
+      });
+
     }
   }
 
+  getNewCells(x, y, id, r){
+    let newCells = this.state.baseCells.map(function(arr) {
+      return arr.slice();
+    });
+    let p = pieces[id*4+r];
+    for (let i = 0; i < p.length; i++)
+      for (let j = 0; j < p[0].length; j++){
+        if (p[i][j] != ' ')
+          newCells[i+y][j+x] = p[i][j];
+      }
+    //preview
+    let foundPreview = false;
+    let foundY = 0;
+    for (let h = y+p.length; h < TOTAL_ROWS; h++){
+      if (this.moveValid(x, h, id, r, newCells)){
+        foundPreview = true;
+        foundY = h;
+        //break;
+      }
+    }
+    if (foundPreview){
+      for (let i = 0; i < p.length; i++)
+        for (let j = 0; j < p[0].length; j++){
+          if (p[i][j] != ' ')
+            newCells[i+foundY][j+x] = 7;
+        }
+    }
 
+    return newCells;
+  }
 
   rotate(rotation){//rotation=-1 for left
     let x = this.state.pieceX;
@@ -386,10 +442,14 @@ class Game extends React.Component{
       let ox = ROTATEOFFSETSX[i] * rotation;
       let oy = ROTATEOFFSETSY[i];
       if (this.rotateValid(x+ox, y+oy, id, r, this.state.baseCells)){
+        x += ox;
+        y += oy;
+        let newCells = this.getNewCells(x, y, id, r);
         this.setState({
-          pieceX : x+ox,
-          pieceY : y+oy,
+          pieceX : x,
+          pieceY : y,
           pieceRotation : r,
+          cells : newCells,
         });
         return;
       }
